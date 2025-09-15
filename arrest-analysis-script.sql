@@ -16,7 +16,8 @@ LIMIT 50;
  Exploring each jurisdiction's most common crime types
 
  Notes:
- - some descriptions had overlapping traits causing incomplete results
+ - some crimecodes had overlapping descriptions causing incomplete results,
+ like pet larceny
  - there was an additional jurisdiction ori: VA002023C
  - For ACPD, a lot of larceny, domestic abuse
  - For CPD, a lot of drunk in public, warrant service, domestic assault
@@ -48,6 +49,9 @@ ORDER BY
 /*
  TASK:
  Grouping crime types that I found repetitive by common factor
+
+ Notes:
+ - One issue is that it groups misdemeanors with felonies
  */
 
 --groups all arrests related to 'Larceny'
@@ -55,19 +59,90 @@ SELECT description, COUNT(*) AS Occurences
 FROM arrests
 WHERE description ILIKE '%Larceny%'
 GROUP BY description
-ORDER BY Occurences DESC
+ORDER BY Occurences DESC;
 
 --groups all arrests related to 'DUI'
 SELECT description, COUNT(*) AS Occurences
 FROM arrests
 WHERE description ILIKE '%DUI%'
 GROUP BY description
-ORDER BY Occurences DESC
+ORDER BY Occurences DESC;
 
 --groups all arrests related to 'Warrant'
 SELECT description, COUNT(*) AS Occurences
 FROM arrests
 WHERE description ILIKE '%Warrant%'
 GROUP BY description
-ORDER BY Occurences DESC
+ORDER BY Occurences DESC;
 
+--------------------------------------------------
+/*
+ Task:
+ Exploring the demographic breakdown by changing previous code
+
+ Notes:
+ - If I had population sums of demographics, I could take percentages
+ - Misdemeanor and Felony overlap
+ - For Larceny, African American male nearly the same as white male
+ - For DUI, predominantly white demographic
+ - For Warrant, 1561 (White male) vs 1224 (African American male) so pretty close
+ - For Assault, African American male was 200 less than White male, and African
+ American female was 13 less than White female
+ - For Drug, 3002 (White male) vs 1909 (African American male), and 783 vs 292 (female)
+
+ */
+
+--Sort by Larceny
+SELECT race, sex, COUNT(*) AS NumberOfLarcenyArrests
+FROM arrests
+WHERE description ILIKE '%Larceny%'
+AND race NOT IN ('Unknown', 'Microsoft Word', 'New World Text')
+AND sex NOT IN ('Unknown', 'Microsoft Word', 'New World Text')
+AND race IS NOT NULL AND race != ('')
+AND sex IS NOT NULL AND sex != ('')
+GROUP BY race, sex
+ORDER BY NumberOfLarcenyArrests DESC;
+
+--Sort by DUI
+SELECT race, sex, COUNT(*) AS NumberOfDUIArrests
+FROM arrests
+WHERE description ILIKE '%DUI%'
+AND race NOT IN ('Unknown', 'Microsoft Word', 'New World Text')
+AND sex NOT IN ('Unknown', 'Microsoft Word', 'New World Text')
+AND race IS NOT NULL AND race != ('')
+AND sex IS NOT NULL AND sex != ('')
+GROUP BY race, sex
+ORDER BY NumberOfDUIArrests DESC;
+
+--Sort by Warrant-related arrests
+SELECT race, sex, COUNT(*) AS NumberOfWarrantArrests
+FROM arrests
+WHERE description ILIKE '%Warrant%'
+AND race NOT IN ('Unknown', 'Microsoft Word', 'New World Text')
+AND sex NOT IN ('Unknown', 'Microsoft Word', 'New World Text')
+AND race IS NOT NULL AND race != ('')
+AND sex IS NOT NULL AND sex != ('')
+GROUP BY race, sex
+ORDER BY NumberOfWarrantArrests DESC;
+
+--Sort by Assault arrests
+SELECT race, sex, COUNT(*) AS NumberOfAssaultArrests
+FROM arrests
+WHERE description ILIKE '%Assault%'
+AND race NOT IN ('Unknown', 'Microsoft Word', 'New World Text')
+AND sex NOT IN ('Unknown', 'Microsoft Word', 'New World Text')
+AND race IS NOT NULL AND race != ('')
+AND sex IS NOT NULL AND sex != ('')
+GROUP BY race, sex
+ORDER BY NumberOfAssaultArrests DESC;
+
+--Sort by Drug arrests
+SELECT race, sex, COUNT(*) AS NumberOfDrugArrests
+FROM arrests
+WHERE description ILIKE '%Drug%'
+AND race NOT IN ('Unknown', 'Microsoft Word', 'New World Text')
+AND sex NOT IN ('Unknown', 'Microsoft Word', 'New World Text')
+AND race IS NOT NULL AND race != ('')
+AND sex IS NOT NULL AND sex != ('')
+GROUP BY race, sex
+ORDER BY NumberOfDrugArrests DESC;
