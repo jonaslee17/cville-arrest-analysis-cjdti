@@ -146,3 +146,44 @@ AND race IS NOT NULL AND race != ('')
 AND sex IS NOT NULL AND sex != ('')
 GROUP BY race, sex
 ORDER BY NumberOfDrugArrests DESC;
+
+--------------------------------------------------
+/*
+ Task:
+ Exploring arrest report trends over time
+
+ Notes:
+ For total:
+ - Highest in 2017 at 11556 by a considerable margin
+ - Dipped and was the lowest in 2020 (probably due to Covid)
+ - Increased and plateaued at ~6000 from 2022-24
+
+ For by race:
+ - When looking at proportions, the numbers are very consistent from 2017-2024
+ - White proportions hovers from 55-57%; AA proportions hovers from 40-42%
+ */
+
+--Total arrest trend from 2017-2024
+SELECT EXTRACT(YEAR FROM TO_DATE(arrestdatetime, 'DD-Mon-YY')) AS ArrestYear,
+       COUNT(*) AS TotalArrests
+FROM arrests
+GROUP BY ArrestYear
+ORDER BY ArrestYear;
+
+--White vs AA arrest count from 2017-2024
+SELECT EXTRACT(YEAR FROM TO_DATE(arrestdatetime, 'DD-Mon-YY')) AS ArrestYear,
+       COUNT(CASE WHEN race = 'White' THEN 1 END) AS WhiteArrestCount,
+       COUNT(CASE WHEN race = 'African American' THEN 1 END) AS AAArrestCount
+FROM arrests
+WHERE race IN ('White', 'African American')
+GROUP BY ArrestYear
+ORDER BY ArrestYear;
+
+--White vs AA arrest count proportionate to total arrest count from 2017-2024
+SELECT EXTRACT(YEAR FROM TO_DATE(arrestdatetime, 'DD-Mon-YY')) AS ArrestYear,
+       (COUNT(CASE WHEN race = 'White' THEN 1 END)*1.0/COUNT(*)) AS "WhiteArrestProportion",
+       (COUNT(CASE WHEN race = 'African American' THEN 1 END)*1.0/COUNT(*)) AS "AAArrestProportion"
+FROM arrests
+GROUP BY ArrestYear
+ORDER BY ArrestYear;
+
