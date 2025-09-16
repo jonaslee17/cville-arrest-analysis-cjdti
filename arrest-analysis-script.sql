@@ -6,7 +6,7 @@
 SELECT arrestnumber, COUNT(*) AS count
 FROM "arrests"
 GROUP BY arrestnumber
-HAVING COUNT(*) > 1
+HAVING COUNT(*) > 17
 ORDER BY COUNT(*) DESC
 LIMIT 50;
 
@@ -181,9 +181,30 @@ ORDER BY ArrestYear;
 
 --White vs AA arrest count proportionate to total arrest count from 2017-2024
 SELECT EXTRACT(YEAR FROM TO_DATE(arrestdatetime, 'DD-Mon-YY')) AS ArrestYear,
-       (COUNT(CASE WHEN race = 'White' THEN 1 END)*1.0/COUNT(*)) AS "WhiteArrestProportion",
-       (COUNT(CASE WHEN race = 'African American' THEN 1 END)*1.0/COUNT(*)) AS "AAArrestProportion"
+       ROUND((COUNT(CASE WHEN race = 'White' THEN 1 END)*1.0/COUNT(*)),3) AS "WhiteArrestProportion",
+       ROUND((COUNT(CASE WHEN race = 'African American' THEN 1 END)*1.0/COUNT(*)),3) AS "AAArrestProportion"
 FROM arrests
 GROUP BY ArrestYear
 ORDER BY ArrestYear;
 
+--------------------------------------------------
+--Extra:
+
+--male vs female
+SELECT sex, COUNT(CASE WHEN sex = 'Male' THEN 1 END) AS male, COUNT(CASE WHEN sex = 'Female' THEN 1 END) AS female
+FROM arrests
+WHERE sex IS NOT NULL AND sex != 'Unknown'
+GROUP BY sex
+
+--record of amount of reports with an unclassified race
+SELECT
+    CASE
+        WHEN race IN ('Unknown', 'Microsoft Word', 'New World Text', '') OR race IS NULL
+        THEN 'Unclassified'
+        ELSE 'Classified'
+    END AS RaceCategory,
+    COUNT(*) AS NumberOfArrests
+FROM
+    "arrests"
+GROUP BY
+    RaceCategory;
