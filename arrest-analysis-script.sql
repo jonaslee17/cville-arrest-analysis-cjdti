@@ -208,3 +208,65 @@ FROM
     "arrests"
 GROUP BY
     RaceCategory;
+
+--------------------------------------------------
+/*
+ TASK:
+ Exploring when felonies and misdemeanors are differentiated
+
+ Notes:
+ - Used AI to identify the felony v misdemeanor patterns
+ */
+
+SELECT
+    CASE
+        --explicit mentions
+        WHEN description ILIKE '%felony%' THEN 'Felony'
+        WHEN description ILIKE '%misdemeanor%' OR description ILIKE '%misd%' THEN 'Misdemeanor'
+
+        --code based classification
+        WHEN crimecode IN ('520','200','370','220') AND description ILIKE '%felony%' THEN 'Felony'
+
+        --crime type patterns for felonies
+        WHEN description ILIKE '%grand larceny%'
+             OR description ILIKE '%malicious%'
+             OR description ILIKE '%firearm%'
+             OR description ILIKE '%burglary%'
+             OR description ILIKE '%robbery%'
+             OR description ILIKE '%strangulation%'
+             OR (description ILIKE '%assault%' AND description ILIKE '%malicious%')
+             OR (description ILIKE '%drugs%' AND description ILIKE '%intent%')
+             OR (description ILIKE '%drugs%' AND description ILIKE '%distribution%')
+             OR (description ILIKE '%drugs%' AND description ILIKE '%manufacture%')
+             OR description ILIKE '%arson%'
+             OR (description ILIKE '%larceny%' AND description ILIKE '%$1,000%')
+        THEN 'Felony'
+
+        --crime type patterns for misdemeanors
+        WHEN description ILIKE '%petit larceny%'
+             OR description ILIKE '%petty larceny%'
+             OR description ILIKE '%drunk in public%'
+             OR description ILIKE '%dui%'
+             OR description ILIKE '%dwi%'
+             OR description ILIKE '%trespass%'
+             OR (description ILIKE '%assault%' AND description ILIKE '%simple%')
+             OR (description ILIKE '%assault%' AND description ILIKE '%domestic%' AND NOT description ILIKE '%malicious%')
+             OR description ILIKE '%public urination%'
+             OR (description ILIKE '%larceny%' AND description ILIKE '%<$%')
+             OR (description ILIKE '%larceny%' AND description ILIKE '%below $1,000%')
+        THEN 'Misdemeanor'
+
+        --warrant service/violations
+        WHEN description ILIKE '%warrant service%'
+             OR description ILIKE '%probation%violation%'
+             OR description ILIKE '%failure to appear%'
+        THEN 'Administrative/Warrant'
+
+        ELSE 'Unclassified'
+    END as offense_level,
+    crimecode,
+    description,
+    COUNT(*) as arrest_count
+FROM arrests
+GROUP BY offense_level, crimecode, description
+ORDER BY offense_level, arrest_count DESC;
